@@ -148,7 +148,7 @@
 
     .hero {
       display: grid;
-      grid-template-columns: minmax(0, 1.06fr) minmax(430px, .94fr);
+      grid-template-columns: minmax(390px, .86fr) minmax(500px, 1.14fr);
       min-height: calc(100svh - 90px);
       border-bottom: var(--line);
     }
@@ -157,13 +157,28 @@
       min-height: 680px;
       overflow: hidden;
       border-right: var(--line);
-      background: #97bcf3;
+      background-color: #97bcf3;
+      background-image:
+        linear-gradient(rgba(17,17,17,.13) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(17,17,17,.13) 1px, transparent 1px);
+      background-size: 28px 28px;
       perspective: 1100px;
+    }
+    .hero-photo::before {
+      position: absolute;
+      inset: 17px;
+      z-index: 0;
+      content: "";
+      border: 1.5px dashed rgba(17,17,17,.48);
+      pointer-events: none;
     }
     .hero-photo__inner {
       position: absolute;
-      inset: -28px;
-      transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(1.055);
+      inset: 34px 34px 58px;
+      overflow: hidden;
+      border: 1.5px solid #111;
+      box-shadow: 10px 10px 0 #111;
+      transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(1.025);
       transform-style: preserve-3d;
       transition: transform .18s ease-out;
       will-change: transform;
@@ -185,9 +200,9 @@
     }
     .photo-label {
       position: absolute;
-      left: 16px;
-      bottom: 16px;
-      z-index: 2;
+      left: 22px;
+      bottom: 20px;
+      z-index: 4;
       padding: 8px 11px;
       border: 1.5px solid #111;
       background: var(--acid);
@@ -197,6 +212,58 @@
       letter-spacing: .05em;
       text-transform: uppercase;
       box-shadow: 4px 4px 0 #111;
+    }
+    .photo-coordinates {
+      position: absolute;
+      top: 21px;
+      left: 29px;
+      z-index: 4;
+      padding: 5px 8px;
+      border: 1.5px solid #111;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .08em;
+    }
+    .photo-index {
+      position: absolute;
+      top: 50%;
+      right: -35px;
+      z-index: 4;
+      width: 104px;
+      padding: 6px;
+      transform: rotate(90deg);
+      border: 1.5px solid #111;
+      background: #111;
+      color: #fff;
+      font-size: 9px;
+      font-weight: 850;
+      letter-spacing: .13em;
+      text-align: center;
+    }
+    .photo-sticker {
+      position: absolute;
+      right: 13px;
+      bottom: 19px;
+      z-index: 5;
+      display: grid;
+      place-items: center;
+      width: 92px;
+      height: 92px;
+      transform: rotate(8deg);
+      border: 1.5px solid #111;
+      border-radius: 50%;
+      background: var(--pink);
+      color: #111;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 13px;
+      font-style: italic;
+      font-weight: 800;
+      line-height: 1.05;
+      text-align: center;
+      box-shadow: 5px 5px 0 #111;
     }
     .hero-copy { display: grid; grid-template-rows: 1fr auto; background: var(--acid); color: #111; }
     .hero-copy__main { padding: clamp(26px, 4vw, 68px) clamp(22px, 4vw, 64px); }
@@ -431,8 +498,13 @@
       .header-tools { display: flex; }
       .theme-toggle { min-width: 38px; padding: 0 9px; }
       .resume-mini { display: none; }
-      .hero-photo { min-height: 70svh; }
-      .photo-label { left: 10px; bottom: 10px; }
+      .hero-photo { min-height: 62svh; }
+      .hero-photo__inner { inset: 22px 22px 49px; box-shadow: 7px 7px 0 #111; }
+      .hero-photo::before { inset: 10px; }
+      .photo-label { left: 11px; bottom: 10px; font-size: 9px; }
+      .photo-coordinates { top: 11px; left: 15px; }
+      .photo-sticker { right: 9px; bottom: 12px; width: 72px; height: 72px; font-size: 11px; box-shadow: 4px 4px 0 #111; }
+      .photo-index { display: none; }
       .hero-copy { min-height: 640px; }
       .hero h1 { font-size: clamp(52px, 18vw, 78px); }
       .hero-meta { grid-template-columns: 1fr; }
@@ -499,6 +571,9 @@
         <div class="hero-photo__inner">
           <img src="assets/portrait-city.jpg" alt="刘宇涵在城市街头的个人照片">
         </div>
+        <span class="photo-coordinates">39.9042° N / 116.4074° E</span>
+        <span class="photo-index">PORTRAIT / 01</span>
+        <span class="photo-sticker">OPEN<br>TO WORK</span>
         <span class="photo-label">MOVE YOUR CURSOR · INTERACTIVE PORTRAIT</span>
       </div>
 
