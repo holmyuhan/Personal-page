@@ -178,10 +178,7 @@
       overflow: hidden;
       border: 1.5px solid #111;
       box-shadow: 10px 10px 0 #111;
-      transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(1.025);
-      transform-style: preserve-3d;
-      transition: transform .18s ease-out;
-      will-change: transform;
+      transform: none;
     }
     .hero-photo img {
       width: 100%;
@@ -189,14 +186,6 @@
       object-fit: cover;
       object-position: 50% 50%;
       filter: saturate(.96) contrast(1.03);
-    }
-    .hero-photo__inner::after {
-      position: absolute;
-      inset: 0;
-      content: "";
-      opacity: .25;
-      background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,.9), transparent 25%);
-      mix-blend-mode: soft-light;
     }
     .photo-label {
       position: absolute;
@@ -264,6 +253,53 @@
       line-height: 1.05;
       text-align: center;
       box-shadow: 5px 5px 0 #111;
+    }
+    .cursor-trail {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 120;
+      display: grid;
+      place-items: center;
+      width: 29px;
+      height: 29px;
+      pointer-events: none;
+      user-select: none;
+      animation: trail-float 920ms cubic-bezier(.18,.75,.25,1) forwards;
+      will-change: transform, opacity;
+    }
+    .cursor-trail--stamp {
+      border: 2px dotted currentColor;
+      background: #fff7e9;
+      color: #e86987;
+      font-size: 16px;
+      box-shadow: 2px 2px 0 rgba(17,17,17,.7);
+    }
+    .cursor-trail--sea {
+      font-size: 25px;
+      filter: drop-shadow(2px 2px 0 rgba(17,17,17,.3));
+    }
+    .cursor-trail--sun {
+      color: #f4bb00;
+      font-size: 32px;
+      font-weight: 900;
+      text-shadow: 1px 1px 0 #111;
+    }
+    .cursor-trail--orb {
+      width: 22px;
+      height: 22px;
+      border: 1.5px solid #111;
+      border-radius: 50%;
+      background: #8fcb3d;
+      color: #fff;
+      font-size: 8px;
+      font-weight: 900;
+      letter-spacing: -.08em;
+    }
+    @keyframes trail-float {
+      0% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--trail-rotate)) scale(.25); }
+      18% { opacity: 1; transform: translate(-50%, -50%) rotate(var(--trail-rotate)) scale(1); }
+      100% { opacity: 0; transform: translate(calc(-50% + var(--trail-x)), calc(-50% + var(--trail-y))) rotate(calc(var(--trail-rotate) + 24deg)) scale(.68); }
     }
     .hero-copy { display: grid; grid-template-rows: 1fr auto; background: var(--acid); color: #111; }
     .hero-copy__main { padding: clamp(26px, 4vw, 68px) clamp(22px, 4vw, 64px); }
@@ -534,7 +570,9 @@
       html { scroll-behavior: auto; }
       *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
       .reveal { opacity: 1; transform: none; }
+      .cursor-trail { display: none; }
     }
+    @media (hover: none), (pointer: coarse) { .cursor-trail { display: none; } }
   </style>
 </head>
 <body>
@@ -574,7 +612,7 @@
         <span class="photo-coordinates">39.9042° N / 116.4074° E</span>
         <span class="photo-index">PORTRAIT / 01</span>
         <span class="photo-sticker">OPEN<br>TO WORK</span>
-        <span class="photo-label">MOVE YOUR CURSOR · INTERACTIVE PORTRAIT</span>
+        <span class="photo-label">MOVE AROUND · COLLECT LITTLE JOYS</span>
       </div>
 
       <div class="hero-copy">
@@ -759,26 +797,46 @@
         localStorage.setItem('yuhan-theme', next);
       });
 
-      const stage = document.querySelector('#portrait-stage');
-      const portrait = stage?.querySelector('.hero-photo__inner');
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-      if (stage && portrait && !reducedMotion) {
-        stage.addEventListener('pointermove', (event) => {
-          const rect = stage.getBoundingClientRect();
-          const x = (event.clientX - rect.left) / rect.width;
-          const y = (event.clientY - rect.top) / rect.height;
-          portrait.style.setProperty('--ry', `${(x - .5) * 7}deg`);
-          portrait.style.setProperty('--rx', `${(.5 - y) * 7}deg`);
-          portrait.style.setProperty('--mx', `${x * 100}%`);
-          portrait.style.setProperty('--my', `${y * 100}%`);
-        });
-        stage.addEventListener('pointerleave', () => {
-          portrait.style.setProperty('--ry', '0deg');
-          portrait.style.setProperty('--rx', '0deg');
-          portrait.style.setProperty('--mx', '50%');
-          portrait.style.setProperty('--my', '50%');
-        });
+      if (!reducedMotion && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        const trailStickers = [
+          { glyph: '🐟', kind: 'cursor-trail--sea' },
+          { glyph: '✹', kind: 'cursor-trail--sun' },
+          { glyph: '🌼', kind: 'cursor-trail--stamp' },
+          { glyph: 'POP', kind: 'cursor-trail--orb' },
+          { glyph: '🐳', kind: 'cursor-trail--sea' },
+          { glyph: '💌', kind: 'cursor-trail--stamp' }
+        ];
+        let trailIndex = 0;
+        let lastTrailAt = 0;
+        let lastTrailX = -100;
+        let lastTrailY = -100;
+
+        window.addEventListener('pointermove', (event) => {
+          if (event.pointerType && event.pointerType !== 'mouse') return;
+          const now = performance.now();
+          const distance = Math.hypot(event.clientX - lastTrailX, event.clientY - lastTrailY);
+          if (now - lastTrailAt < 58 || distance < 18) return;
+
+          const stickerData = trailStickers[trailIndex % trailStickers.length];
+          trailIndex += 1;
+          lastTrailAt = now;
+          lastTrailX = event.clientX;
+          lastTrailY = event.clientY;
+
+          const sticker = document.createElement('span');
+          sticker.className = `cursor-trail ${stickerData.kind}`;
+          sticker.textContent = stickerData.glyph;
+          sticker.setAttribute('aria-hidden', 'true');
+          sticker.style.left = `${event.clientX}px`;
+          sticker.style.top = `${event.clientY}px`;
+          sticker.style.setProperty('--trail-rotate', `${-16 + Math.random() * 32}deg`);
+          sticker.style.setProperty('--trail-x', `${-13 + Math.random() * 26}px`);
+          sticker.style.setProperty('--trail-y', `${-25 - Math.random() * 20}px`);
+          document.body.appendChild(sticker);
+          sticker.addEventListener('animationend', () => sticker.remove(), { once: true });
+        }, { passive: true });
       }
 
       const revealItems = document.querySelectorAll('.reveal');
